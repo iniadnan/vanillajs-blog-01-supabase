@@ -8,7 +8,43 @@ const SUPABASE = supabase.createClient(API_URLd, API_KEYd);
 const containerArticleListDOM = document.querySelector(
   "#container__article-list"
 );
+const containerModalDOM = document.querySelector("#container__modal");
+const formModalDOM = document.querySelector("#form__modal");
 
+// HANDLE EVENT
+const toggleModal = () => {
+  containerModalDOM.classList.toggle("hidden");
+  containerModalDOM.classList.toggle("show-modal");
+};
+
+const onInsertData = () => {
+  try {
+    // GET DATA FROM FORM
+    const setData = {
+      title: document.forms["form__modal"]["title"].value,
+      synopsis: document.forms["form__modal"]["synopsis"].value,
+      slug: document.forms["form__modal"]["slug"].value,
+      author: document.forms["form__modal"]["author"].value,
+      text: document.forms["form__modal"]["text"].value,
+    };
+
+    // CLOSE MODAL FORM
+    toggleModal();
+
+    // RESET FORM
+    document.forms["form__modal"]["title"].value = "";
+    document.forms["form__modal"]["synopsis"].value = "";
+    document.forms["form__modal"]["slug"].value = "";
+    document.forms["form__modal"]["author"].value = "";
+    document.forms["form__modal"]["text"].value = "";
+
+    insertPost(setData);
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+// PLAY WITH DATA
 const getAllPosts = async () => {
   try {
     const { data: posts, error: postsError } = await SUPABASE.from(
@@ -40,16 +76,20 @@ const getSinglePost = async () => {
   }
 };
 
-const insertPost = async () => {
+const insertPost = async ({ title, synopsis, slug, author, text }) => {
   try {
     const { error } = await SUPABASE.from("posts").insert({
-      id: 1,
-      name: "Denmark",
+      title: title,
+      synopsis: synopsis,
+      slug: slug,
+      author: author,
+      text: text,
     });
 
     if (error !== null) {
       throw error;
     }
+
   } catch (e) {
     console.log(e);
   }
