@@ -44,6 +44,20 @@ const onInsertData = () => {
   }
 };
 
+const onUpdateData = () => {
+  // GET DATA FROM FORM
+  const setData = {
+    id: document.forms["form__modal"]["id"].value,
+    title: document.forms["form__modal"]["title"].value,
+    synopsis: document.forms["form__modal"]["synopsis"].value,
+    slug: document.forms["form__modal"]["slug"].value,
+    author: document.forms["form__modal"]["author"].value,
+    text: document.forms["form__modal"]["text"].value,
+  };
+
+  updatePost(setData);
+};
+
 // PLAY WITH DATA
 const getAllPosts = async () => {
   try {
@@ -63,9 +77,8 @@ const getAllPosts = async () => {
 
 const getSinglePost = async (slug) => {
   try {
-    console.log(slug)
     const { data: post, error: errorPost } = await SUPABASE.from("posts")
-      .select("title, text, synopsis, slug, author, created_at")
+      .select("id, title, text, synopsis, slug, author, created_at")
       .eq("slug", slug)
       .single();
 
@@ -73,7 +86,7 @@ const getSinglePost = async (slug) => {
       throw errorPost;
     }
 
-    return post
+    return post;
   } catch (e) {
     console.log(e);
   }
@@ -97,15 +110,24 @@ const insertPost = async ({ title, synopsis, slug, author, text }) => {
   }
 };
 
-const updatePost = async () => {
+const updatePost = async ({ id, title, synopsis, slug, author, text }) => {
   try {
-    const { error } = await SUPABASE.from("posts")
-      .update({ name: "Australia" })
-      .eq("id", 1);
+    const { error: errorUpdate } = await SUPABASE.from("posts")
+      .update({
+        title: title,
+        synopsis: synopsis,
+        slug: slug,
+        author: author,
+        text: text,
+      })
+      .eq("id", id);
 
-    if (error !== null) {
+    if (errorUpdate !== null) {
       throw error;
     }
+
+    // REDIRECT
+    location.replace("./index.html")
   } catch (e) {
     console.log(e);
   }
@@ -153,10 +175,11 @@ function runOnHome() {
 function runOnDetail(slug) {
   getSinglePost(slug).then((post) => {
     // SET DATA FORM
+    document.forms["form__modal"]["id"].value = post.id;
     document.forms["form__modal"]["title"].value = post.title;
     document.forms["form__modal"]["synopsis"].value = post.synopsis;
     document.forms["form__modal"]["slug"].value = post.slug;
     document.forms["form__modal"]["author"].value = post.author;
     document.forms["form__modal"]["text"].value = post.text;
-  })
+  });
 }
