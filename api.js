@@ -1,8 +1,8 @@
 // SET API SUPABASE
-const API_URLd = "https://vfkbqzbgkvktbyiudlay.supabase.co";
-const API_KEYd =
+const API_URL = "https://vfkbqzbgkvktbyiudlay.supabase.co";
+const API_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZma2JxemJna3ZrdGJ5aXVkbGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTI2Njg1NTYsImV4cCI6MjAwODI0NDU1Nn0.vn8gN0sc8HAVTAnuOUwsATCtPj68mMUiQQ_EMtJfdBk";
-const SUPABASE = supabase.createClient(API_URLd, API_KEYd);
+const SUPABASE = supabase.createClient(API_URL, API_KEY);
 
 // SET DOM
 const containerArticleListDOM = document.querySelector(
@@ -11,10 +11,28 @@ const containerArticleListDOM = document.querySelector(
 const containerModalDOM = document.querySelector("#container__modal");
 const formModalDOM = document.querySelector("#form__modal");
 
+// SET VARIABEL
+let setPosts = [];
+
 // HANDLE EVENT
 const toggleModal = () => {
   containerModalDOM.classList.toggle("hidden");
   containerModalDOM.classList.toggle("show-modal");
+};
+
+const onSearch = (event) => {
+  let stringSearch = event.value;
+
+  if(stringSearch.length < 1) {
+    return injectToMain(setPosts)
+  }
+
+  const filteredPosts = setPosts.filter((post) => {
+    return post.title.toLowerCase().includes(stringSearch.toLowerCase());
+  });
+
+  return injectToMain(filteredPosts)
+
 };
 
 const onInsertData = () => {
@@ -127,7 +145,7 @@ const updatePost = async ({ id, title, synopsis, slug, author, text }) => {
     }
 
     // REDIRECT
-    location.replace("./index.html")
+    location.replace("./index.html");
   } catch (e) {
     console.log(e);
   }
@@ -146,11 +164,27 @@ const deletePost = async (slug) => {
 };
 
 // RUN FIRST
-function runOnHome() {
-  getAllPosts().then((posts) => {
-    let listArticle = "";
-    posts.forEach((post) => {
-      listArticle += `
+async function runOnHome() {
+  setPosts = await getAllPosts();
+  injectToMain(setPosts);
+}
+
+function runOnDetail(slug) {
+  getSinglePost(slug).then((post) => {
+    // SET DATA FORM
+    document.forms["form__modal"]["id"].value = post.id;
+    document.forms["form__modal"]["title"].value = post.title;
+    document.forms["form__modal"]["synopsis"].value = post.synopsis;
+    document.forms["form__modal"]["slug"].value = post.slug;
+    document.forms["form__modal"]["author"].value = post.author;
+    document.forms["form__modal"]["text"].value = post.text;
+  });
+}
+
+function injectToMain(dataPosts) {
+  let listArticle = "";
+  dataPosts.forEach((post) => {
+    listArticle += `
           <article class="relative bg-gray-50 hover:bg-gray-100 border rounded-lg py-3 px-5">
               <button onClick="deletePost('${post.slug}')" type="button" class="absolute top-0 right-0 bg-red-600 py-2 px-2 rounded text-gray-50 z-10">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
@@ -167,19 +201,6 @@ function runOnHome() {
               </a>
           </article>
       `;
-    });
-    containerArticleListDOM.innerHTML = listArticle;
   });
-}
-
-function runOnDetail(slug) {
-  getSinglePost(slug).then((post) => {
-    // SET DATA FORM
-    document.forms["form__modal"]["id"].value = post.id;
-    document.forms["form__modal"]["title"].value = post.title;
-    document.forms["form__modal"]["synopsis"].value = post.synopsis;
-    document.forms["form__modal"]["slug"].value = post.slug;
-    document.forms["form__modal"]["author"].value = post.author;
-    document.forms["form__modal"]["text"].value = post.text;
-  });
+  containerArticleListDOM.innerHTML = listArticle;
 }
